@@ -1,0 +1,15 @@
+title: Page
+type: object
+properties:
+  id:
+    type: string
+  url:
+    type: string
+  name:
+    type: string
+  interval:
+    type: number
+  maxNumberOfRevisions:
+    type: number
+  domElement:
+    type: string

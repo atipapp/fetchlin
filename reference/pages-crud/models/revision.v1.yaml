@@ -1,0 +1,9 @@
+title: Revision
+type: object
+properties:
+  id:
+    type: string
+  data:
+    type: string
+  fetchTime:
+    type: string

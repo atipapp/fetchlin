@@ -1,0 +1,125 @@
+openapi: 3.0.0
+info:
+  title: Pages CRUD
+  version: '1.0'
+  contact:
+    name: Attila Papp
+    email: papp.attila971@gmail.com
+  termsOfService: 'https://github.com/pppttl/fetchlin'
+  license:
+    name: MIT
+    url: 'https://github.com/pppttl/fetchlin'
+  description: A CRUD API for the page object of fetchlin.
+servers:
+  - url: 'http://localhost:8080'
+    description: Attila Papp
+paths:
+  /pages:
+    get:
+      summary: Get all pages
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ../common/models/page.v1.yaml
+    post:
+      summary: ''
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ../common/models/page.v1.yaml
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: ../common/models/page.v1.yaml
+  '/pages/{id}':
+    parameters:
+      - type: string
+        name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The id of the page
+    get:
+      summary: Get a page
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ../common/models/page.v1.yaml
+        '404':
+          description: Not Found
+      description: ''
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: ../common/models/page.v1.yaml
+    delete:
+      summary: Delete a page and all its revisions
+      responses:
+        '200':
+          description: OK
+      description: ''
+    put:
+      summary: Update a page
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ../common/models/page.v1.yaml
+        '404':
+          description: Not Found
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+  '/pages/{id}/revisions':
+    parameters:
+      - type: string
+        name: id
+        in: path
+        required: true
+    get:
+      summary: Get all revisions for a page
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ../common/models/revision.v1.yaml
+    post:
+      summary: Fetch a new revision
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ../common/models/revision.v1.yaml
+    delete:
+      summary: Delete all revisions
+      responses:
+        '200':
+          description: OK
+components:
+  schemas: {}
+  securitySchemes: {}
