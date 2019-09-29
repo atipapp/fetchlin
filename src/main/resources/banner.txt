@@ -1,0 +1,9 @@
+${Ansi.BLUE}
+${Ansi.BLUE}   __     _       _     _ _
+${Ansi.BLUE}  / _|   | |     | |   | (_)
+${Ansi.BLUE} | |_ ___| |_ ___| |__ | |_ _ __
+${Ansi.BLUE} |  _/ _ \ __/ __| '_ \| | | '_ \
+${Ansi.BLUE} | ||  __/ || (__| | | | | | | | |
+${Ansi.BLUE} |_| \___|\__\___|_| |_|_|_|_| |_|
+${Ansi.BLUE}
+${Ansi.BLUE}${spring.application.name} running on ${Ansi.GREEN}Spring Boot ${Ansi.YELLOW}${spring-boot.version}
