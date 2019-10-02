@@ -32,4 +32,11 @@ class PageService {
         pageStore.removeIf { it.id == id }
     }
 
+    fun updatePage(updatedPage: Page): Page {
+        val originalPage = getPage(updatedPage.id)
+
+        deletePage(originalPage.id)
+        return createPage(updatedPage)
+    }
+
 }
