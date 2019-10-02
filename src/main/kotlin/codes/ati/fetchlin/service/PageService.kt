@@ -28,4 +28,8 @@ class PageService {
         }
     }
 
+    fun deletePage(id: String) {
+        pageStore.removeIf { it.id == id }
+    }
+
 }
