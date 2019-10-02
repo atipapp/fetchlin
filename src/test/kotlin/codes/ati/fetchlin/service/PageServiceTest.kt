@@ -3,10 +3,7 @@ package codes.ati.fetchlin.service
 import codes.ati.fetchlin.domain.Page
 import codes.ati.fetchlin.error.PageNotFound
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 
 object PageServiceTest {
@@ -53,6 +50,16 @@ object PageServiceTest {
     @Test
     fun `Getting a specific page throws exception if not found`() {
         assertThrows<PageNotFound> { service.getPage(id = "THIS-SHOULD-NOT-BE-FOUND") }
+    }
+
+    @Test
+    fun `Deleting a specific page`() {
+        val createdPage = withOnePage()
+
+        service.deletePage(id = createdPage.id)
+
+        val pagesAfterDeletion = service.getPages()
+        assertFalse { pagesAfterDeletion.contains(createdPage) }
     }
 
     private fun withOnePage(): Page {
