@@ -62,6 +62,24 @@ object PageServiceTest {
         assertFalse { pagesAfterDeletion.contains(createdPage) }
     }
 
+    @Test
+    fun `Updating a specific page`() {
+        val original = withOnePage()
+
+        val expected = Page(
+                id = original.id,
+                url = "http://david-hasselhoff.com/pics",
+                name = "David Hasselhoff's home page but cooler after the editing",
+                interval = 1,
+                domElement = "",
+                maxNumberOfRevisions = 1,
+                revisions = mutableListOf()
+        )
+
+        val actual = service.updatePage(expected)
+        assertEquals(expected, actual)
+    }
+
     private fun withOnePage(): Page {
         val page = Page(
                 id = "ABCD-1234",
