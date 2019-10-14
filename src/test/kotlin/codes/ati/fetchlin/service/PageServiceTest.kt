@@ -1,8 +1,10 @@
 package codes.ati.fetchlin.service
 
 import codes.ati.fetchlin.domain.Page
+import codes.ati.fetchlin.domain.Revision
 import codes.ati.fetchlin.error.PageNotFound
 import org.junit.jupiter.api.assertThrows
+import java.time.OffsetDateTime
 import kotlin.test.*
 
 
@@ -86,6 +88,38 @@ object PageServiceTest {
 
         val actual = service.getPagesToUpdate()
         assertTrue(actual.contains(original.id))
+    }
+
+    @Test
+    fun `Get pages to update returns page which has to be updated`() {
+        val pageNotToInclude = Page(
+                id = "ABCD-1234",
+                url = "http://david-hasselhoff.com",
+                name = "David Hasselhoff's home page",
+                interval = 10,
+                domElement = "",
+                maxNumberOfRevisions = 10,
+                revisions = mutableListOf(Revision(1, "asd", OffsetDateTime.now()))
+        )
+
+        service.createPage(pageNotToInclude)
+
+        val pageToInclude = Page(
+                id = "EFGH-1234",
+                url = "http://pamela-anderson.com",
+                name = "Pamela Anderson's home page",
+                interval = 1,
+                domElement = "",
+                maxNumberOfRevisions = 10,
+                revisions = mutableListOf(Revision(1, "asd", OffsetDateTime.now().minusMinutes(2)))
+        )
+
+        service.createPage(pageToInclude)
+
+        val actual = service.getPagesToUpdate()
+
+        assertTrue(actual.contains(pageToInclude.id))
+        assertFalse(actual.contains(pageNotToInclude.id))
     }
 
     private fun withOnePage(): Page {
