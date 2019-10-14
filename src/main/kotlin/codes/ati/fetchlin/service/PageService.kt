@@ -1,9 +1,12 @@
 package codes.ati.fetchlin.service
 
 import codes.ati.fetchlin.domain.Page
+import codes.ati.fetchlin.domain.Revision
 import codes.ati.fetchlin.error.PageNotFound
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
+import java.util.*
+import kotlin.collections.HashMap
 
 @Service
 class PageService {
@@ -52,6 +55,11 @@ class PageService {
         }
 
         return result;
+    }
+
+    fun addRevisionToPage(id: String, data: String) {
+        val page = getPage(id)
+        page.revisions.add(Revision(UUID.randomUUID().toString(), data, OffsetDateTime.now()))
     }
 
 }

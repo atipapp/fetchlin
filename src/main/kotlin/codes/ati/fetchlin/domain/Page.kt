@@ -7,5 +7,5 @@ data class Page(
         var interval: Long,
         var maxNumberOfRevisions: Int,
         var domElement: String,
-        val revisions: List<Revision>
+        val revisions: MutableList<Revision>
 )
