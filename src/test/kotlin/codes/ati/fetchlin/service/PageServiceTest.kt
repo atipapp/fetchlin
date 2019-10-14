@@ -5,6 +5,7 @@ import codes.ati.fetchlin.domain.Revision
 import codes.ati.fetchlin.error.PageNotFound
 import org.junit.jupiter.api.assertThrows
 import java.time.OffsetDateTime
+import java.util.*
 import kotlin.test.*
 
 
@@ -99,7 +100,7 @@ object PageServiceTest {
                 interval = 10,
                 domElement = "",
                 maxNumberOfRevisions = 10,
-                revisions = mutableListOf(Revision(1, "asd", OffsetDateTime.now()))
+                revisions = mutableListOf(Revision(UUID.randomUUID().toString(), "asd", OffsetDateTime.now()))
         )
 
         service.createPage(pageNotToInclude)
@@ -111,7 +112,7 @@ object PageServiceTest {
                 interval = 1,
                 domElement = "",
                 maxNumberOfRevisions = 10,
-                revisions = mutableListOf(Revision(1, "asd", OffsetDateTime.now().minusMinutes(2)))
+                revisions = mutableListOf(Revision(UUID.randomUUID().toString(), "asd", OffsetDateTime.now().minusMinutes(2)))
         )
 
         service.createPage(pageToInclude)
@@ -120,6 +121,17 @@ object PageServiceTest {
 
         assertTrue(actual.contains(pageToInclude.id))
         assertFalse(actual.contains(pageNotToInclude.id))
+    }
+
+    @Test
+    fun `Add revision to page`() {
+        val original = withOnePage()
+        val content = "New revision added at ${OffsetDateTime.now()}"
+
+        service.addRevisionToPage(original.id, content)
+
+        val actual = service.getPage(original.id)
+        assertEquals(content, actual.revisions.last().data)
     }
 
     private fun withOnePage(): Page {
