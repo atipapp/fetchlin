@@ -80,6 +80,14 @@ object PageServiceTest {
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun `Get pages to update returns page which has no previous revisions`() {
+        val original = withOnePage()
+
+        val actual = service.getPagesToUpdate()
+        assertTrue(actual.contains(original.id))
+    }
+
     private fun withOnePage(): Page {
         val page = Page(
                 id = "ABCD-1234",
