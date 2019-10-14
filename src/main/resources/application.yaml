@@ -1,3 +1,7 @@
 spring:
   application:
     name: fetchlin-backend
+
+fetchlin:
+  pages:
+    timeout: 5000
