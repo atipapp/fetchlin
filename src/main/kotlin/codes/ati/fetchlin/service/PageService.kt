@@ -3,6 +3,7 @@ package codes.ati.fetchlin.service
 import codes.ati.fetchlin.domain.Page
 import codes.ati.fetchlin.error.PageNotFound
 import org.springframework.stereotype.Service
+import java.time.OffsetDateTime
 
 @Service
 class PageService {
@@ -37,6 +38,20 @@ class PageService {
 
         deletePage(originalPage.id)
         return createPage(updatedPage)
+    }
+
+    fun getPagesToUpdate(): Map<String, String> {
+        val result = HashMap<String, String>()
+
+        val pagesToUpdate = pageStore.filter {
+            it.revisions.isEmpty() || it.revisions.last().fetchTime.plusMinutes(it.interval).isBefore(OffsetDateTime.now())
+        }
+
+        for (page in pagesToUpdate) {
+            result[page.id] = page.url
+        }
+
+        return result;
     }
 
 }
