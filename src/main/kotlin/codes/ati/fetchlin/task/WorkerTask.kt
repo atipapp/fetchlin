@@ -2,13 +2,11 @@ package codes.ati.fetchlin.task
 
 import codes.ati.fetchlin.service.ClientService
 import codes.ati.fetchlin.service.PageService
-import lombok.extern.slf4j.Slf4j
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-@Slf4j
 class WorkerTask(val pageService: PageService, val clientService: ClientService) {
 
     private val log = LoggerFactory.getLogger(WorkerTask::class.java)
