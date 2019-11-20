@@ -4,6 +4,7 @@ import codes.ati.fetchlin.domain.Page
 import codes.ati.fetchlin.domain.Revision
 import codes.ati.fetchlin.error.PageNotFound
 import org.junit.jupiter.api.assertThrows
+import org.mockito.Mockito.mock
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.*
@@ -13,9 +14,12 @@ object PageServiceTest {
 
     private lateinit var service: PageService
 
+    private var pageDetectorMock = mock(ChangeDetector::class.java)
+
     @BeforeTest
     fun setUp() {
-        service = PageService()
+        pageDetectorMock = mock(ChangeDetector::class.java)
+        service = PageService(pageDetectorMock)
     }
 
     @Test
@@ -128,7 +132,7 @@ object PageServiceTest {
         val original = withOnePage()
         val content = "New revision added at ${OffsetDateTime.now()}"
 
-        service.addRevisionToPage(original.id, content)
+        service.checkForNewRevision(original.id, content)
 
         val actual = service.getPage(original.id)
         assertEquals(content, actual.revisions.last().data)

@@ -15,14 +15,22 @@ class WorkerTask(val pageService: PageService, val clientService: ClientService)
     fun fetchPages() {
         val pagesToUpdate = pageService.getPagesToUpdate()
 
+        if (pagesToUpdate.isEmpty()) {
+            return
+        }
+
         log.info("Checking the following pages: ${pagesToUpdate.values}")
 
+        fetch(pagesToUpdate)
+    }
+
+    private fun fetch(pagesToUpdate: Map<String, String>) {
         pagesToUpdate.forEach { (id, url) ->
             run {
-                val result = clientService.fetch(url)
+                val pageData = clientService.fetch(url)
 
-                if (result != null) {
-                    pageService.addRevisionToPage(id, result)
+                if (pageData != null) {
+                    pageService.checkForNewRevision(id, pageData)
                 } else {
                     log.info("Failed getting $url . Retrying later.")
                 }

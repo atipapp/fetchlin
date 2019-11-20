@@ -3,13 +3,16 @@ package codes.ati.fetchlin.service
 import codes.ati.fetchlin.domain.Page
 import codes.ati.fetchlin.domain.Revision
 import codes.ati.fetchlin.error.PageNotFound
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.collections.HashMap
 
 @Service
-class PageService {
+class PageService(val changeDetector: ChangeDetector) {
+
+    private val log = LoggerFactory.getLogger(PageService::class.java)
 
     private val pageStore = mutableListOf<Page>()
 
@@ -57,9 +60,26 @@ class PageService {
         return result;
     }
 
-    fun addRevisionToPage(id: String, data: String) {
+    fun checkForNewRevision(id: String, newData: String) {
         val page = getPage(id)
-        page.revisions.add(Revision(UUID.randomUUID().toString(), data, OffsetDateTime.now()))
+
+        if (page.revisions.isEmpty()) {
+            page.revisions.add(Revision(UUID.randomUUID().toString(), newData, OffsetDateTime.now()))
+        }
+
+        if (changeOccurred(page, newData)) {
+            page.revisions.add(Revision(UUID.randomUUID().toString(), newData, OffsetDateTime.now()))
+            log.info("Change occurred on {} page.", page.name)
+        } else {
+            log.info("No changes detected on {} page.", page.name)
+        }
+    }
+
+    private fun changeOccurred(page: Page, data: String): Boolean {
+        val filter = page.domElement
+
+        return ((filter != null && changeDetector.didFilteredContentChange(previous = page.revisions.last().data, current = data, filter = filter))
+                || changeDetector.didContentChange(previous = page.revisions.last().data, current = data))
     }
 
 }
