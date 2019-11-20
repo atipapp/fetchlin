@@ -4,8 +4,8 @@ data class Page(
         val id: String,
         var url: String,
         var name: String,
-        var interval: Int,
+        var interval: Long,
         var maxNumberOfRevisions: Int,
-        var domElement: String,
-        val revisions: List<Revision>
+        var domElement: String?,
+        val revisions: MutableList<Revision>
 )
