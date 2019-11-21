@@ -14,3 +14,8 @@ spring:
 fetchlin:
   pages:
     timeout: 5000
+  notifications:
+    email:
+      default-address: fetchlin.bot@gmail.com
+      subject: Your monitored website changed!
+      text: There are changes on
