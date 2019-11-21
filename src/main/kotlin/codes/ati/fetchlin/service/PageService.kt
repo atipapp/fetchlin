@@ -4,13 +4,17 @@ import codes.ati.fetchlin.domain.Page
 import codes.ati.fetchlin.domain.Revision
 import codes.ati.fetchlin.error.PageNotFound
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.collections.HashMap
 
 @Service
-class PageService(val changeDetector: ChangeDetector) {
+class PageService(val changeDetector: ChangeDetector, val notificationSender: NotificationSender,
+                  @Value("\${fetchlin.notifications.email.default-address}") val defaultEmail: String,
+                  @Value("\${fetchlin.notifications.email.subject}") val subject: String,
+                  @Value("\${fetchlin.notifications.email.text}") val text: String) {
 
     private val log = LoggerFactory.getLogger(PageService::class.java)
 
@@ -69,9 +73,11 @@ class PageService(val changeDetector: ChangeDetector) {
 
         if (changeOccurred(page, newData)) {
             page.revisions.add(Revision(UUID.randomUUID().toString(), newData, OffsetDateTime.now()))
-            log.info("Change occurred on {} page.", page.name)
+            log.info("Change occurred on ${page.name} page.")
+
+            notificationSender.sendSimpleText(defaultEmail, subject, text + "${page.name} / ${page.url}")
         } else {
-            log.info("No changes detected on {} page.", page.name)
+            log.info("No changes detected on ${page.name} page.")
         }
     }
 
