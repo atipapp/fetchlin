@@ -1,6 +1,15 @@
 spring:
   application:
     name: fetchlin-backend
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: fetchlin.bot@gmail.com
+    properties:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
 
 fetchlin:
   pages:
