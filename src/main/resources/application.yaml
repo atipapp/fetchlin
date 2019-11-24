@@ -1,7 +1,21 @@
 spring:
   application:
     name: fetchlin-backend
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: fetchlin.bot@gmail.com
+    properties:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
 
 fetchlin:
   pages:
     timeout: 5000
+  notifications:
+    email:
+      default-address: fetchlin.bot@gmail.com
+      subject: Your monitored website changed!
+      text: There are changes on

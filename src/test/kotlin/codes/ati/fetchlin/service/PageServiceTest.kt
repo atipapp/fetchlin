@@ -14,12 +14,14 @@ object PageServiceTest {
 
     private lateinit var service: PageService
 
-    private var pageDetectorMock = mock(ChangeDetector::class.java)
+    private lateinit var pageDetectorMock: ChangeDetector
+    private lateinit var notificationSenderMock: NotificationSender
 
     @BeforeTest
     fun setUp() {
         pageDetectorMock = mock(ChangeDetector::class.java)
-        service = PageService(pageDetectorMock)
+        notificationSenderMock = mock(NotificationSender::class.java)
+        service = PageService(pageDetectorMock, notificationSenderMock, "david@hasselhoff.com", "Test subject", "Test text")
     }
 
     @Test
