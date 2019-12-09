@@ -3,15 +3,19 @@ package codes.ati.fetchlin.service
 import codes.ati.fetchlin.domain.Page
 import codes.ati.fetchlin.domain.Revision
 import codes.ati.fetchlin.error.PageNotFound
+import codes.ati.fetchlin.repository.PageRepository
+import codes.ati.fetchlin.repository.RevisionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Mono
 import java.time.OffsetDateTime
-import java.util.*
-import kotlin.collections.HashMap
 
 @Service
-class PageService(val changeDetector: ChangeDetector, val notificationSender: NotificationSender,
+class PageService(val changeDetector: ChangeDetector,
+                  val notificationSender: NotificationSender,
+                  val pageRepository: PageRepository,
+                  val revisionRepository: RevisionRepository,
                   @Value("\${fetchlin.notifications.email.default-address}") val defaultEmail: String,
                   @Value("\${fetchlin.notifications.email.subject}") val subject: String,
                   @Value("\${fetchlin.notifications.email.text}") val text: String) {
@@ -20,59 +24,63 @@ class PageService(val changeDetector: ChangeDetector, val notificationSender: No
 
     private val pageStore = mutableListOf<Page>()
 
-    fun createPage(page: Page): Page {
-        pageStore.add(page)
-        return page
+    fun createPage(page: Page): Mono<Page> {
+        return pageRepository.save(page)
     }
 
     fun getPages(): List<Page> {
         return pageStore
     }
 
-    fun getPage(id: String): Page {
-        val possiblePage = pageStore.findLast { it.id == id }
+    fun getPage(id: Long): Mono<Page> {
+        return pageRepository.findById(id)
+    }
 
-        if (possiblePage != null) {
-            return possiblePage
-        } else {
-            throw PageNotFound()
+    fun deletePage(id: Long) {
+        pageRepository.deleteById(id)
+    }
+
+    fun updatePage(updatedPage: Page): Mono<Page> {
+        val pageToUpdate = getPage(updatedPage.id ?: throw PageNotFound())
+
+        return pageToUpdate.flatMap {
+            deletePage(it.id!!)
+            createPage(updatedPage)
         }
     }
 
-    fun deletePage(id: String) {
-        pageStore.removeIf { it.id == id }
-    }
+    fun getPagesToUpdate(): Map<Long, String> {
+        val result = HashMap<Long, String>()
 
-    fun updatePage(updatedPage: Page): Page {
-        val originalPage = getPage(updatedPage.id)
+        val allPages = pageRepository.findAll().toIterable()
 
-        deletePage(originalPage.id)
-        return createPage(updatedPage)
-    }
-
-    fun getPagesToUpdate(): Map<String, String> {
-        val result = HashMap<String, String>()
-
-        val pagesToUpdate = pageStore.filter {
-            it.revisions.isEmpty() || it.revisions.last().fetchTime.plusMinutes(it.interval).isBefore(OffsetDateTime.now())
+        val pagesToUpdate = allPages.filter {
+            val lastFetchTime = it.lastFetchTime
+            lastFetchTime == null || lastFetchTime.plusMinutes(it.interval).isBefore(OffsetDateTime.now())
         }
 
         for (page in pagesToUpdate) {
-            result[page.id] = page.url
+            result[page.id ?: throw IllegalArgumentException("Missing pageId")] = page.url
         }
 
         return result;
     }
 
-    fun checkForNewRevision(id: String, newData: String) {
-        val page = getPage(id)
+    fun checkForNewRevision(id: Long, newData: String) {
+        val page = getPage(id).block()
 
-        if (page.revisions.isEmpty()) {
-            page.revisions.add(Revision(UUID.randomUUID().toString(), newData, OffsetDateTime.now()))
+        if (page == null) {
+            log.warn("Can't find page, ignoring revision checking")
+            return
+        }
+
+        if (page.lastFetchTime == null) {
+            addNewRevisionToPage(page, newData)
+            log.info("Added first revision of ${page.name} page.")
         }
 
         if (changeOccurred(page, newData)) {
-            page.revisions.add(Revision(UUID.randomUUID().toString(), newData, OffsetDateTime.now()))
+            addNewRevisionToPage(page, newData)
             log.info("Change occurred on ${page.name} page.")
 
             notificationSender.sendSimpleText(defaultEmail, subject, text + "${page.name} / ${page.url}")
@@ -81,11 +89,21 @@ class PageService(val changeDetector: ChangeDetector, val notificationSender: No
         }
     }
 
+    private fun addNewRevisionToPage(page: Page, newData: String) {
+        page.lastFetchTime = OffsetDateTime.now()
+        revisionRepository.save(Revision(data = newData, fetchTime = OffsetDateTime.now(), pageId = page.id
+                ?: throw IllegalArgumentException("Missing pageId")))
+    }
+
     private fun changeOccurred(page: Page, data: String): Boolean {
         val filter = page.domElement
 
-        return ((filter != null && changeDetector.didFilteredContentChange(previous = page.revisions.last().data, current = data, filter = filter))
-                || changeDetector.didContentChange(previous = page.revisions.last().data, current = data))
+        val previousData = revisionRepository.findAllByPageId(page.id
+                ?: throw IllegalArgumentException("Missing pageId"))
+                .toIterable().last().data
+
+        return ((filter != null && changeDetector.didFilteredContentChange(previous = previousData, current = data, filter = filter))
+                || changeDetector.didContentChange(previous = previousData, current = data))
     }
 
 }

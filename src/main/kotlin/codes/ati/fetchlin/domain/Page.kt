@@ -1,22 +1,17 @@
 package codes.ati.fetchlin.domain
 
 import org.springframework.data.annotation.Id
+import org.springframework.data.relational.core.mapping.Column
+import org.springframework.data.relational.core.mapping.Table
+import java.time.OffsetDateTime
 
+@Table("FETCHLIN_PAGE")
 data class Page(
-        val id: String,
-        var url: String,
-        var name: String,
-        var interval: Long,
+        @Id val id: Long? = null,
+        @Column("url_") var url: String,
+        @Column("name_") var name: String,
+        @Column("interval_") var interval: Long,
         var maxNumberOfRevisions: Int,
         var domElement: String?,
-        val revisions: MutableList<Revision>
-)
-
-data class PageInDatabase(
-        @Id val id: Long? = null,
-        var url_: String,
-        var name_: String,
-        var interval_: Long,
-        var maxNumberOfRevisions: Int,
-        var domElement: String?
+        var lastFetchTime: OffsetDateTime?
 )

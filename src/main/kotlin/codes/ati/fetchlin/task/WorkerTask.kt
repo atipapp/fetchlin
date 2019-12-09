@@ -24,7 +24,7 @@ class WorkerTask(val pageService: PageService, val clientService: ClientService)
         fetch(pagesToUpdate)
     }
 
-    private fun fetch(pagesToUpdate: Map<String, String>) {
+    private fun fetch(pagesToUpdate: Map<Long, String>) {
         pagesToUpdate.forEach { (id, url) ->
             run {
                 val pageData = clientService.fetch(url)
