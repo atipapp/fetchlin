@@ -48,6 +48,10 @@ class PageService(val changeDetector: ChangeDetector,
         }
     }
 
+    fun getRevisionsForPage(pageId: Long): Flux<Revision> {
+        return revisionRepository.findAllByPageId(pageId)
+    }
+
     fun getPagesToUpdate(): Map<Long, String> {
         val result = HashMap<Long, String>()
 

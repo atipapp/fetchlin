@@ -13,5 +13,5 @@ data class Page(
         @Column("interval_") var interval: Long,
         var maxNumberOfRevisions: Int,
         var domElement: String?,
-        var lastFetchTime: OffsetDateTime?
+        var lastFetchTime: OffsetDateTime? = null
 )
