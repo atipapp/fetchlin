@@ -11,7 +11,7 @@ class WorkerTask(val pageService: PageService, val clientService: ClientService)
 
     private val log = LoggerFactory.getLogger(WorkerTask::class.java)
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 60000)
     fun fetchPages() {
         val pagesToUpdate = pageService.getPagesToUpdate()
 

@@ -58,7 +58,7 @@ class PageService(val changeDetector: ChangeDetector,
         val allPages = pageRepository.findAll().toIterable()
 
         val pagesToUpdate = allPages.filter {
-            val lastFetchTime = it.lastFetchTime
+            val lastFetchTime = if (it.lastFetchTime != null) OffsetDateTime.parse(it.lastFetchTime) else null
             lastFetchTime == null || lastFetchTime.plusMinutes(it.interval).isBefore(OffsetDateTime.now())
         }
 
@@ -93,20 +93,25 @@ class PageService(val changeDetector: ChangeDetector,
     }
 
     private fun addNewRevisionToPage(page: Page, newData: String) {
-        page.lastFetchTime = OffsetDateTime.now()
+        page.lastFetchTime = OffsetDateTime.now().toString()
         revisionRepository.save(Revision(data = newData, fetchTime = OffsetDateTime.now(), pageId = page.id
                 ?: throw IllegalArgumentException("Missing pageId")))
+        updatePage(page).block()
     }
 
     private fun changeOccurred(page: Page, data: String): Boolean {
         val filter = page.domElement
 
-        val previousData = revisionRepository.findAllByPageId(page.id
+        val revisions = revisionRepository.findAllByPageId(page.id
                 ?: throw IllegalArgumentException("Missing pageId"))
-                .toIterable().last().data
+                .collectList().block()
 
-        return ((filter != null && changeDetector.didFilteredContentChange(previous = previousData, current = data, filter = filter))
-                || changeDetector.didContentChange(previous = previousData, current = data))
+        val previousData = if (revisions.isNullOrEmpty()) {
+            ""
+        } else {
+            revisions.last().data
+        }
+        return changeDetector.didContentChange(previous = previousData, current = data, filter = filter)
     }
 
 }

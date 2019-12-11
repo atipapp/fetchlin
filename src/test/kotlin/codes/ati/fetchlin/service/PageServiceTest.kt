@@ -122,7 +122,7 @@ object PageServiceTest {
                 interval = 10,
                 domElement = "",
                 maxNumberOfRevisions = 10,
-                lastFetchTime = OffsetDateTime.now().minusMinutes(1)
+                lastFetchTime = OffsetDateTime.now().minusMinutes(1).toString()
         )
 
         doReturn(Mono.just(pageNotToInclude)).`when`(pageRepositoryMock).findById(1)
@@ -134,7 +134,7 @@ object PageServiceTest {
                 interval = 1,
                 domElement = "",
                 maxNumberOfRevisions = 10,
-                lastFetchTime = OffsetDateTime.now().minusMinutes(2)
+                lastFetchTime = OffsetDateTime.now().minusMinutes(2).toString()
         )
 
         doReturn(Flux.just(pageToInclude, pageNotToInclude)).`when`(pageRepositoryMock).findAll()

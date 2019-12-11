@@ -3,7 +3,6 @@ package codes.ati.fetchlin.domain
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
-import java.time.OffsetDateTime
 
 @Table("FETCHLIN_PAGE")
 data class Page(
@@ -13,5 +12,5 @@ data class Page(
         @Column("interval_") var interval: Long,
         var maxNumberOfRevisions: Int,
         var domElement: String?,
-        var lastFetchTime: OffsetDateTime? = null
+        var lastFetchTime: String? = null
 )
