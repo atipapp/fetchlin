@@ -1,6 +1,5 @@
 package codes.ati.fetchlin.task
 
-import codes.ati.fetchlin.service.ClientService
 import codes.ati.fetchlin.service.PageService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled

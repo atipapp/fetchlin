@@ -1,4 +1,4 @@
-package codes.ati.fetchlin.service
+package codes.ati.fetchlin.service.changedetector
 
 interface ChangeDetector {
 

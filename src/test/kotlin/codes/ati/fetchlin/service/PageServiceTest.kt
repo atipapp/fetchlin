@@ -4,6 +4,8 @@ import codes.ati.fetchlin.domain.Page
 import codes.ati.fetchlin.domain.Revision
 import codes.ati.fetchlin.repository.PageRepository
 import codes.ati.fetchlin.repository.RevisionRepository
+import codes.ati.fetchlin.service.changedetector.ChangeDetector
+import codes.ati.fetchlin.service.notification.NotificationSender
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import reactor.core.publisher.Flux

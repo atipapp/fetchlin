@@ -5,6 +5,8 @@ import codes.ati.fetchlin.domain.Revision
 import codes.ati.fetchlin.error.PageNotFound
 import codes.ati.fetchlin.repository.PageRepository
 import codes.ati.fetchlin.repository.RevisionRepository
+import codes.ati.fetchlin.service.changedetector.ChangeDetector
+import codes.ati.fetchlin.service.notification.NotificationSender
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service

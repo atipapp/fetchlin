@@ -1,10 +1,10 @@
-package codes.ati.fetchlin.service
+package codes.ati.fetchlin.service.changedetector
 
 import org.jsoup.Jsoup
 import org.springframework.stereotype.Service
 
 @Service
-class HTMLChangeDetector : ChangeDetector {
+class DefaultChangeDetector : ChangeDetector {
 
     override fun didContentChange(previous: String, current: String, filter: String?): Boolean {
         return if (filter == null) {

@@ -1,4 +1,4 @@
-package codes.ati.fetchlin.service
+package codes.ati.fetchlin.task
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service

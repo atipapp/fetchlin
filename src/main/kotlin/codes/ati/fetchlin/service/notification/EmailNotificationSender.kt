@@ -1,4 +1,4 @@
-package codes.ati.fetchlin.service
+package codes.ati.fetchlin.service.notification
 
 import org.slf4j.LoggerFactory
 import org.springframework.mail.MailException
@@ -7,9 +7,9 @@ import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.stereotype.Service
 
 @Service
-class EmailSender(val emailSender: JavaMailSender) : NotificationSender {
+class EmailNotificationSender(val emailSender: JavaMailSender) : NotificationSender {
 
-    private val log = LoggerFactory.getLogger(EmailSender::class.java)
+    private val log = LoggerFactory.getLogger(EmailNotificationSender::class.java)
 
     override fun sendSimpleText(to: String, subject: String, text: String) {
         val message = SimpleMailMessage()
