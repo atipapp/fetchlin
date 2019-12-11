@@ -96,7 +96,7 @@ class PageService(val changeDetector: ChangeDetector,
         page.lastFetchTime = OffsetDateTime.now().toString()
         revisionRepository.save(Revision(data = newData, fetchTime = OffsetDateTime.now(), pageId = page.id
                 ?: throw IllegalArgumentException("Missing pageId")))
-        updatePage(page).block()
+        pageRepository.save(page)
     }
 
     private fun changeOccurred(page: Page, data: String): Boolean {
