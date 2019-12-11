@@ -77,18 +77,22 @@ class PageService(val changeDetector: ChangeDetector,
             return
         }
 
-        if (page.lastFetchTime == null) {
-            addNewRevisionToPage(page, newData)
-            log.info("Added first revision of ${page.name} page.")
-        }
+        when {
+            page.lastFetchTime == null -> {
+                addNewRevisionToPage(page, newData)
+                log.info("Added first revision of ${page.name} page.")
+            }
 
-        if (changeOccurred(page, newData)) {
-            addNewRevisionToPage(page, newData)
-            log.info("Change occurred on ${page.name} page.")
+            changeOccurred(page, newData) -> {
+                addNewRevisionToPage(page, newData)
+                log.info("Change occurred on ${page.name} page.")
 
-            notificationSender.sendSimpleText(defaultEmail, subject, text + "${page.name} / ${page.url}")
-        } else {
-            log.info("No changes detected on ${page.name} page.")
+                notificationSender.sendSimpleText(defaultEmail, subject, text + "${page.name} / ${page.url}")
+            }
+
+            else -> {
+                log.info("No changes detected on ${page.name} page.")
+            }
         }
     }
 
