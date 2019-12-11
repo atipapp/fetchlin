@@ -8,6 +8,7 @@ import codes.ati.fetchlin.repository.RevisionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.time.OffsetDateTime
 
@@ -22,14 +23,12 @@ class PageService(val changeDetector: ChangeDetector,
 
     private val log = LoggerFactory.getLogger(PageService::class.java)
 
-    private val pageStore = mutableListOf<Page>()
-
     fun createPage(page: Page): Mono<Page> {
         return pageRepository.save(page)
     }
 
-    fun getPages(): List<Page> {
-        return pageStore
+    fun getPages(): Flux<Page> {
+        return pageRepository.findAll()
     }
 
     fun getPage(id: Long): Mono<Page> {
