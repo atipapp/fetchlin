@@ -1,3 +1,6 @@
+
+-- I'm sorry I had to do this barbaric thing. R2DBC does not support query derivation as of Dec 2019. 😿
+
 CREATE TABLE FETCHLIN_PAGE (
     id SERIAL PRIMARY KEY,
     url_ VARCHAR(255),

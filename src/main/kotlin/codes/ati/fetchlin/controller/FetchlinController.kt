@@ -37,7 +37,7 @@ class FetchlinController(private val pageService: PageService) {
         return pageService.updatePage(page)
     }
 
-    @GetMapping("/{pageId}/revisions")
+    @GetMapping("/{pageId}/revisions", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
     fun getRevisionsForPage(@PathVariable pageId: Long): Flux<Revision> {
         return pageService.getRevisionsForPage(pageId)
     }

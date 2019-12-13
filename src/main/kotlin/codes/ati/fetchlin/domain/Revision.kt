@@ -10,5 +10,6 @@ data class Revision(
         @Id val id: Long? = null,
         @Column("data_") val data: String,
         val fetchTime: OffsetDateTime,
-        val pageId: Long
+        val pageId: Long  // I'm sorry I had to do this barbaric thing. R2DBC does not support embedded entities as of Dec 2019. 😿
+
 )

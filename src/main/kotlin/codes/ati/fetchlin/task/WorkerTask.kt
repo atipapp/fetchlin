@@ -6,7 +6,10 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-class WorkerTask(val pageService: PageService, val clientService: ClientService) {
+class WorkerTask(
+        val pageService: PageService,
+        val clientService: ClientService
+) {
 
     private val log = LoggerFactory.getLogger(WorkerTask::class.java)
 
@@ -15,6 +18,7 @@ class WorkerTask(val pageService: PageService, val clientService: ClientService)
         val pagesToUpdate = pageService.getPagesToUpdate()
 
         if (pagesToUpdate.isEmpty()) {
+            log.info("PageService reported no pages to update.")
             return
         }
 
@@ -25,14 +29,12 @@ class WorkerTask(val pageService: PageService, val clientService: ClientService)
 
     private fun fetch(pagesToUpdate: Map<Long, String>) {
         pagesToUpdate.forEach { (id, url) ->
-            run {
-                val pageData = clientService.fetch(url)
+            val pageData = clientService.fetch(url)
 
-                if (pageData != null) {
-                    pageService.checkForNewRevision(id, pageData)
-                } else {
-                    log.info("Failed getting $url . Retrying later.")
-                }
+            if (pageData != null) {
+                pageService.checkForNewRevision(id, pageData)
+            } else {
+                log.info("Failed getting $url . Retrying later.")
             }
         }
     }

@@ -26,22 +26,27 @@ class PageService(val changeDetector: ChangeDetector,
     private val log = LoggerFactory.getLogger(PageService::class.java)
 
     fun createPage(page: Page): Mono<Page> {
+        log.info("Saving page with URL: ${page.url}")
         return pageRepository.save(page)
     }
 
     fun getPages(): Flux<Page> {
+        log.info("Getting all saved pages.")
         return pageRepository.findAll()
     }
 
     fun getPage(id: Long): Mono<Page> {
+        log.info("Getting page with id: $id")
         return pageRepository.findById(id)
     }
 
     fun deletePage(id: Long) {
+        log.info("Deleting page with id: $id")
         pageRepository.deleteById(id)
     }
 
     fun updatePage(updatedPage: Page): Mono<Page> {
+        log.info("Updating page with id: ${updatedPage.id}")
         val pageToUpdate = getPage(updatedPage.id ?: throw PageNotFound())
 
         return pageToUpdate.flatMap {
@@ -50,8 +55,9 @@ class PageService(val changeDetector: ChangeDetector,
         }
     }
 
-    fun getRevisionsForPage(pageId: Long): Flux<Revision> {
-        return revisionRepository.findAllByPageId(pageId)
+    fun getRevisionsForPage(id: Long): Flux<Revision> {
+        log.info("Getting all revisions for a page with id: $id")
+        return revisionRepository.findAllByPageId(id)
     }
 
     fun getPagesToUpdate(): Map<Long, String> {
@@ -65,7 +71,7 @@ class PageService(val changeDetector: ChangeDetector,
         }
 
         for (page in pagesToUpdate) {
-            result[page.id ?: throw IllegalArgumentException("Missing pageId")] = page.url
+            result[page.id ?: handleMissingPageId()] = page.url
         }
 
         return result;
@@ -80,14 +86,14 @@ class PageService(val changeDetector: ChangeDetector,
         }
 
         when {
-            page.lastFetchTime == null -> {
+            page.isWithoutPreviousRevisions() -> {
                 addNewRevisionToPage(page, newData)
-                log.info("Added first revision of ${page.name} page.")
+                log.info("Added first revision of ${page.name} page. Not sending notification.")
             }
 
-            changeOccurred(page, newData) -> {
+            page.hasChanges(newData) -> {
                 addNewRevisionToPage(page, newData)
-                log.info("Change occurred on ${page.name} page.")
+                log.info("Change occurred on ${page.name} page. Sending notification to: $defaultEmail")
 
                 notificationSender.sendSimpleText(defaultEmail, subject, text + "${page.name} / ${page.url}")
             }
@@ -98,18 +104,20 @@ class PageService(val changeDetector: ChangeDetector,
         }
     }
 
+    private fun Page.isWithoutPreviousRevisions() = this.lastFetchTime == null
+
     private fun addNewRevisionToPage(page: Page, newData: String) {
         page.lastFetchTime = OffsetDateTime.now().toString()
         revisionRepository.save(Revision(data = newData, fetchTime = OffsetDateTime.now(), pageId = page.id
-                ?: throw IllegalArgumentException("Missing pageId")))
+                ?: handleMissingPageId()))
         pageRepository.save(page)
     }
 
-    private fun changeOccurred(page: Page, data: String): Boolean {
-        val filter = page.domElement
+    private fun Page.hasChanges(newData: String): Boolean {
+        val filter = this.domElement
 
-        val revisions = revisionRepository.findAllByPageId(page.id
-                ?: throw IllegalArgumentException("Missing pageId"))
+        val revisions = revisionRepository.findAllByPageId(this.id
+                ?: handleMissingPageId())
                 .collectList().block()
 
         val previousData = if (revisions.isNullOrEmpty()) {
@@ -117,7 +125,11 @@ class PageService(val changeDetector: ChangeDetector,
         } else {
             revisions.last().data
         }
-        return changeDetector.didContentChange(previous = previousData, current = data, filter = filter)
+        return changeDetector.didContentChange(previous = previousData, current = newData, filter = filter)
+    }
+
+    private fun handleMissingPageId(): Nothing {
+        throw IllegalArgumentException("Missing pageId")
     }
 
 }
