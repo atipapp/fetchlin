@@ -2,11 +2,15 @@ package codes.ati.fetchlin.service
 
 import codes.ati.fetchlin.domain.Page
 import codes.ati.fetchlin.domain.Revision
-import codes.ati.fetchlin.error.PageNotFound
-import org.junit.jupiter.api.assertThrows
+import codes.ati.fetchlin.repository.PageRepository
+import codes.ati.fetchlin.repository.RevisionRepository
+import codes.ati.fetchlin.service.changedetector.ChangeDetector
+import codes.ati.fetchlin.service.notification.NotificationSender
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import java.time.OffsetDateTime
-import java.util.*
 import kotlin.test.*
 
 
@@ -16,82 +20,96 @@ object PageServiceTest {
 
     private lateinit var pageDetectorMock: ChangeDetector
     private lateinit var notificationSenderMock: NotificationSender
+    private lateinit var revisionRepositoryMock: RevisionRepository
+    private lateinit var pageRepositoryMock: PageRepository
 
     @BeforeTest
     fun setUp() {
         pageDetectorMock = mock(ChangeDetector::class.java)
         notificationSenderMock = mock(NotificationSender::class.java)
-        service = PageService(pageDetectorMock, notificationSenderMock, "david@hasselhoff.com", "Test subject", "Test text")
+        revisionRepositoryMock = mock(RevisionRepository::class.java)
+        pageRepositoryMock = mock(PageRepository::class.java)
+
+        service = PageService(
+                changeDetector = pageDetectorMock,
+                notificationSender = notificationSenderMock,
+                revisionRepository = revisionRepositoryMock,
+                pageRepository = pageRepositoryMock,
+                defaultEmail = "david@hasselhoff.com",
+                subject = "Test subject",
+                text = "Test text"
+        )
+
     }
 
     @Test
     fun `Page creation returns the page`() {
         val expected = Page(
-                id = "ABCD-1234",
+                id = 1,
                 url = "http://david-hasselhoff.com",
                 name = "David Hasselhoff's home page",
                 interval = 10,
                 domElement = "",
-                maxNumberOfRevisions = 10,
-                revisions = mutableListOf()
+                maxNumberOfRevisions = 10
         )
 
-        val actual = service.createPage(expected)
+        doReturn(Mono.just(expected)).`when`(pageRepositoryMock).save(expected)
+
+        val actual = service.createPage(expected).block()
         assertEquals(expected, actual)
     }
 
     @Test
     fun `Get pages returns the saved entry`() {
-        val createdPage = withOnePage()
+        val expected = withOnePageWithoutPreviousVersions()
 
-        val pages = service.getPages()
-        assertTrue { pages.contains(createdPage) }
+        val actual = service.getPages()
+        assertTrue { actual.toIterable().contains(expected) }
     }
+
 
     @Test
     fun `Get a specific page`() {
-        val createdPage = withOnePage()
+        val expected = withOnePageWithoutPreviousVersions()
 
-        val page = service.getPage(id = createdPage.id)
-        assertEquals(createdPage, page)
-    }
-
-    @Test
-    fun `Getting a specific page throws exception if not found`() {
-        assertThrows<PageNotFound> { service.getPage(id = "THIS-SHOULD-NOT-BE-FOUND") }
+        val actual = service.getPage(id = expected.id.toLongOrFail()).block()
+        assertEquals(expected, actual)
     }
 
     @Test
     fun `Deleting a specific page`() {
-        val createdPage = withOnePage()
+        val createdPage = withOnePageWithoutPreviousVersions()
 
-        service.deletePage(id = createdPage.id)
+        service.deletePage(id = createdPage.id.toLongOrFail())
 
-        val pagesAfterDeletion = service.getPages()
+        doReturn(Flux.empty<Page>()).`when`(pageRepositoryMock).findAll()
+
+        val pagesAfterDeletion = service.getPages().toIterable()
         assertFalse { pagesAfterDeletion.contains(createdPage) }
     }
 
     @Test
     fun `Updating a specific page`() {
-        val original = withOnePage()
+        val original = withOnePageWithoutPreviousVersions()
 
         val expected = Page(
                 id = original.id,
                 url = "http://david-hasselhoff.com/pics",
-                name = "David Hasselhoff's home page but cooler after the editing",
+                name = "David Hasselhoff's home page but even cooler after the update",
                 interval = 1,
                 domElement = "",
-                maxNumberOfRevisions = 1,
-                revisions = mutableListOf()
+                maxNumberOfRevisions = 1
         )
 
-        val actual = service.updatePage(expected)
+        doReturn(Mono.just(expected)).`when`(pageRepositoryMock).save(expected)
+
+        val actual = service.updatePage(expected).block()
         assertEquals(expected, actual)
     }
 
     @Test
     fun `Get pages to update returns page which has no previous revisions`() {
-        val original = withOnePage()
+        val original = withOnePageWithoutPreviousVersions()
 
         val actual = service.getPagesToUpdate()
         assertTrue(actual.contains(original.id))
@@ -100,28 +118,29 @@ object PageServiceTest {
     @Test
     fun `Get pages to update returns page which has to be updated`() {
         val pageNotToInclude = Page(
-                id = "ABCD-1234",
+                id = 1,
                 url = "http://david-hasselhoff.com",
                 name = "David Hasselhoff's home page",
                 interval = 10,
                 domElement = "",
                 maxNumberOfRevisions = 10,
-                revisions = mutableListOf(Revision(UUID.randomUUID().toString(), "asd", OffsetDateTime.now()))
+                lastFetchTime = OffsetDateTime.now().minusMinutes(1).toString()
         )
 
-        service.createPage(pageNotToInclude)
+        doReturn(Mono.just(pageNotToInclude)).`when`(pageRepositoryMock).findById(1)
 
         val pageToInclude = Page(
-                id = "EFGH-1234",
+                id = 2,
                 url = "http://pamela-anderson.com",
                 name = "Pamela Anderson's home page",
                 interval = 1,
                 domElement = "",
                 maxNumberOfRevisions = 10,
-                revisions = mutableListOf(Revision(UUID.randomUUID().toString(), "asd", OffsetDateTime.now().minusMinutes(2)))
+                lastFetchTime = OffsetDateTime.now().minusMinutes(2).toString()
         )
 
-        service.createPage(pageToInclude)
+        doReturn(Flux.just(pageToInclude, pageNotToInclude)).`when`(pageRepositoryMock).findAll()
+        doReturn(Mono.just(pageToInclude)).`when`(pageRepositoryMock).findById(2)
 
         val actual = service.getPagesToUpdate()
 
@@ -131,27 +150,42 @@ object PageServiceTest {
 
     @Test
     fun `Add revision to page`() {
-        val original = withOnePage()
+        val page = withOnePageWithoutPreviousVersions()
+        val pageId = page.id.toLongOrFail()
+
         val content = "New revision added at ${OffsetDateTime.now()}"
 
-        service.checkForNewRevision(original.id, content)
+        doReturn(Flux.just(
+                Revision(id = 1,
+                        data = content,
+                        fetchTime = OffsetDateTime.now(),
+                        pageId = pageId)
+        )).`when`(revisionRepositoryMock).findAllByPageId(pageId)
 
-        val actual = service.getPage(original.id)
-        assertEquals(content, actual.revisions.last().data)
+        service.checkForNewRevision(pageId, content)
+
+        val actual = service.getRevisionsForPage(pageId).toIterable()
+        assertEquals(content, actual.last().data)
     }
 
-    private fun withOnePage(): Page {
+    private fun withOnePageWithoutPreviousVersions(): Page {
         val page = Page(
-                id = "ABCD-1234",
+                id = 1,
                 url = "http://david-hasselhoff.com",
                 name = "David Hasselhoff's home page",
                 interval = 10,
                 domElement = "",
-                maxNumberOfRevisions = 10,
-                revisions = mutableListOf()
+                maxNumberOfRevisions = 10
         )
 
-        return service.createPage(page)
+        doReturn(Flux.just(page)).`when`(pageRepositoryMock).findAll()
+        doReturn(Mono.just(page)).`when`(pageRepositoryMock).findById(1)
+
+        return page
+    }
+
+    private fun Long?.toLongOrFail(): Long {
+        return this ?: fail("Missing pageId")
     }
 
 }
